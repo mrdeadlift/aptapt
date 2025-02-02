@@ -1,101 +1,149 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import LargeText from "@/components/LargeText";
+import Rules from "@/components/Rules";
 import Image from "next/image";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [showForm, setShowForm] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [people, setPeople] = useState("");
+  const [isWaiting, setIsWaiting] = useState(false);
+  const [currentTitle, setCurrentTitle] = useState("あぱつ");
+  const [titleIndex, setTitleIndex] = useState(0);
+  const titles = ["あぱつ", "APT", "아파트"];
+  const inputRef = useRef<HTMLInputElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const titleInterval = setInterval(() => {
+      setTitleIndex((prevIndex) => (prevIndex + 1) % titles.length);
+      setCurrentTitle(titles[(titleIndex + 1) % titles.length]);
+    }, 2000);
+
+    return () => clearInterval(titleInterval);
+  });
+
+  useEffect(() => {
+    if (showForm) {
+      inputRef.current?.focus();
+      
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          handleClose();
+        }
+        if (e.key === "Tab") {
+          if (!e.shiftKey && document.activeElement === closeButtonRef.current) {
+            e.preventDefault();
+            inputRef.current?.focus();
+          } else if (e.shiftKey && document.activeElement === inputRef.current) {
+            e.preventDefault();
+            closeButtonRef.current?.focus();
+          }
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [showForm]);
+
+  const handleTap = () => {
+    if (!showForm) {
+      setShowForm(true);
+    }
+  };
+
+  const handleClose = () => {
+    setShowForm(false);
+    setPeople("");
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (people) {
+      setIsWaiting(true);
+    }
+  };
+
+  return (
+    isWaiting ? (
+      <LargeText 
+        onReset={() => setIsWaiting(false)} 
+      />
+    ) : (
+      <div 
+        className="min-h-screen flex flex-col items-center justify-center relative"
+        onClick={handleTap}
+      >
+        <button
+          className="absolute top-4 right-4 p-2 hover:opacity-70 z-10"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowRules(true);
+          }}
+          aria-label="ルールを表示"
+        >
+          <Image
+            src="/rules.svg"
+            width={32}
+            height={32}
+            alt="ゲームのルールを表示"
+            className="text-pink-900"
+          />
+        </button>
+        <div className="text-center">
+          <h1 className="text-8xl font-bold mb-8 title-fade">{currentTitle}</h1>
+          <h2 className="text-xl text-gray-700 mb-4">韓国発の飲みゲーム</h2>
+          <p className="text-gray-600 mb-8">画面をタップして人数を入力してください</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      {showForm && (
+        <div className="fixed inset-0 bg-pink-900 bg-opacity-80 flex items-center justify-center animate-fadeIn" onClick={handleClose}>
+          <form 
+            className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-md mx-4 animate-slideUp" 
+            onClick={e => e.stopPropagation()} 
+            onSubmit={handleSubmit}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="form-title"
+          >
+          <button
+            ref={closeButtonRef}
+            onClick={handleClose}
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            aria-label="閉じる"
+          >
+            ✕
+          </button>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="people" id="form-title">
+            人数を入力してください
+          </label>
+          <input
+            ref={inputRef}
+            type="number"
+            id="people"
+            min="1"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="人数"
+            value={people}
+            onChange={(e) => setPeople(e.target.value)}
+            max="999"
+            required
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <button
+            ref={submitButtonRef}
+            type="submit"
+            className="mt-4 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            決定
+          </button>
+          </form>
+        </div>
+      )}
+      {showRules && <Rules onClose={() => setShowRules(false)} />}
+      </div>
+    )
   );
 }
