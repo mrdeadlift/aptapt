@@ -71,7 +71,8 @@ export default function Home() {
   return (
     isWaiting ? (
       <LargeText 
-        onReset={() => setIsWaiting(false)} 
+        onReset={() => setIsWaiting(false)}
+        numberOfPeople={Number(people)}
       />
     ) : (
       <div 
